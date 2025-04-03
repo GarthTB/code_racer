@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-struct RouteConnector {
+pub(crate) struct RouteConnector {
     /// 按键之间的用时当量，键为两个按键，值为用时
     time_cost_map: HashMap<String, f64>,
     /// 连接方法代号：0-空格或符号，1-无间隔，2-键道顶功
@@ -25,7 +25,6 @@ impl RouteConnector {
                 key.clear();
                 key.push(c1);
                 key.push(c2);
-
                 match self.time_cost_map.get(&key) {
                     Some(value) => total += value,
                     None => {
@@ -39,7 +38,7 @@ impl RouteConnector {
         total
     }
 
-    fn connect(
+    pub(crate) fn connect(
         &self,
         head_code: &str,
         head_time_cost: f64,

@@ -43,14 +43,20 @@ impl RouteConnector {
         let a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         let n = "0123456789";
 
-        // t1 == 0.0 表示没有上文
-        let s1_last = if t1 > 0.0 {
-            s1.chars().next_back().expect("无法获取前部末字符。")
-        } else {
+        let s1_last = if s1.is_empty() {
             '\0'
+        } else {
+            s1.chars().next_back().expect("无法获取前部末字符。")
         };
-        let s2_first = s2.chars().next().expect("无法获取后部首字符。");
-        let s2_last = s2.chars().next_back().expect("无法获取后部末字符。");
+        let (s2_first, s2_last) = if s2.is_empty() {
+            ('\0', '\0')
+        } else {
+            let mut chars = s2.chars();
+            (
+                chars.next().expect("无法获取后部首字符。"),
+                chars.next_back().expect("无法获取后部末字符。"),
+            )
+        };
 
         let directly = || {
             let s: String = s1.chars().chain(s2.chars()).collect();

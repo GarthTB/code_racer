@@ -66,11 +66,9 @@ impl RouteConnector {
                 if head_code.is_empty() {
                     (tail_code.into_string(), tail_time_cost)
                 } else {
-                    let head_last = head_code
-                        .chars()
-                        .next_back()
-                        .expect("无法获取头部末个字符。");
-                    let tail_first = tail_code.chars().next().expect("无法获取尾部首个字符。");
+                    let head_last = head_code.chars().next_back().expect("无法获取头部末字符。");
+                    let tail_first = tail_code.chars().next().expect("无法获取尾部首字符。");
+
                     // 字母 + (字母或数字)，则加空格
                     match letters.contains(head_last)
                         && (letters.contains(tail_first) || numbers.contains(tail_first))
@@ -81,11 +79,8 @@ impl RouteConnector {
                 }
             }
             1 => {
-                let head_last = head_code
-                    .chars()
-                    .next_back()
-                    .expect("无法获取头部末个字符。");
-                let tail_first = tail_code.chars().next().expect("无法获取尾部首个字符。");
+                let head_last = head_code.chars().next_back().expect("无法获取头部末字符。");
+                let tail_first = tail_code.chars().next().expect("无法获取尾部首字符。");
                 connect_with("", head_last, tail_first)
             }
             2 => {
@@ -98,11 +93,11 @@ impl RouteConnector {
 
                 // 新码不足4码，且以音码结尾：后补空格
                 if tail_chars.len() < 4 && yin.contains(tail_chars[tail_chars.len() - 1]) {
-                    let mut space = String::new();
-                    space.push(tail_chars[tail_chars.len() - 1]);
-                    space.push(' ');
-                    real_tail_time_cost += self.get_time_cost(&space);
                     tail_chars.push(' ');
+                    let new_part = tail_chars[tail_chars.len() - 2..]
+                        .iter()
+                        .collect::<String>();
+                    real_tail_time_cost += self.get_time_cost(&new_part);
                 }
                 // 没有上文：直接返回
                 if head_chars.len() == 0 {
@@ -115,27 +110,26 @@ impl RouteConnector {
                     && !letters.contains(tail_chars[0])
                     && !numbers.contains(tail_chars[0])
                 {
-                    let mut space = String::new();
-                    let head_last = head_chars.pop().expect("无法获取头部末个字符。");
-                    space.push(head_last);
-                    space.push(' ');
-                    real_head_time_cost -= self.get_time_cost(&space);
+                    let removed_part = head_chars[head_chars.len() - 2..]
+                        .iter()
+                        .collect::<String>();
+                    real_head_time_cost -= self.get_time_cost(&removed_part);
+                    head_chars.pop().expect("无法删除头部末字符。");
                 }
                 // 新码以形码或数字开头，且前为字母：前加空格
                 else if letters.contains(head_chars[head_chars.len() - 1])
                     && (xing.contains(tail_chars[0]) || numbers.contains(tail_chars[0]))
                 {
-                    let mut space = String::new();
-                    space.push(head_chars[head_chars.len() - 1]);
-                    space.push(' ');
-                    real_head_time_cost += self.get_time_cost(&space);
                     head_chars.push(' ');
+                    let new_part = tail_chars[tail_chars.len() - 2..]
+                        .iter()
+                        .collect::<String>();
+                    real_head_time_cost += self.get_time_cost(&new_part);
                 }
 
                 // 连接
-                let mut route = String::new();
-                route.push_str(&head_chars.iter().collect::<String>());
-                route.push_str(&tail_chars.iter().collect::<String>());
+                head_chars.append(&mut tail_chars);
+                let mut route: String = head_chars.iter().collect();
                 let mut mid_str = String::new();
                 mid_str.push(head_chars[head_chars.len() - 1]);
                 mid_str.push(tail_chars[0]);

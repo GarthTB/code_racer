@@ -10,6 +10,8 @@ pub(crate) struct RouteBuffer {
     head: usize,
     /// 缓冲区内最远终点位置与当前位置的距离
     distance: usize,
+    /// 是否在当前位置连接过编码
+    connected: bool,
     /// 暂存的最优路径
     global_best_route: (String, f64),
 }
@@ -26,6 +28,7 @@ impl RouteBuffer {
                 connector,
                 head: 0,
                 distance: 0,
+                connected: false,
                 global_best_route: (String::new(), 0.0),
             })
         }
@@ -38,12 +41,14 @@ impl RouteBuffer {
         self.buffer[0].insert(String::new(), 0.0);
         self.head = 0;
         self.distance = 0;
+        self.connected = false;
     }
 
     pub(crate) fn next(&mut self) {
         self.buffer[self.head].clear();
         self.head = (self.head + 1) % self.buffer.len();
         self.distance -= 1;
+        self.connected = false;
     }
 
     /// 获取当前位置当量最小的路径
@@ -83,10 +88,14 @@ impl RouteBuffer {
                 .connect(&best_route.0, best_route.1, tail_code, tail_time);
         self.buffer[index].insert(code, time);
 
-        // 更新最远终点位置
-        if self.distance < word_len {
-            self.distance = word_len;
-        }
+        // 更新状态
+        self.distance = self.distance.max(word_len);
+        self.connected = true;
+    }
+
+    /// 获取是否在当前位置连接过编码
+    pub(crate) fn is_connected(&self) -> bool {
+        self.connected
     }
 
     /// 获取全局最优路径

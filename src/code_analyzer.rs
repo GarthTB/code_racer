@@ -171,7 +171,7 @@ pub(crate) fn analyze(
     } else {
         format!(
             "偏倚率\t{:.3}%",
-            100.0 * (left_count - right_count) as f64 / (left_count + right_count) as f64
+            100.0 * (left_count as f64 - right_count as f64) / (left_count + right_count) as f64
         )
     };
 
@@ -215,6 +215,6 @@ pub(crate) fn analyze(
         gen_report("同键2连击", 2, double_count.load(Ordering::Relaxed)),
         gen_report("同键3连击", 3, triple_count.load(Ordering::Relaxed)),
         gen_report("同键4连击", 4, quadruple_count.load(Ordering::Relaxed)),
-        gen_report("同键5+连击", 5, quintuple_count.load(Ordering::Relaxed)),
+        gen_report("同键+连击", 5, quintuple_count.load(Ordering::Relaxed)),
     ]
 }

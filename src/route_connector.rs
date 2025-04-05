@@ -51,10 +51,9 @@ impl RouteConnector {
         let (s2_first, s2_last) = if s2.is_empty() {
             ('\0', '\0')
         } else {
-            let mut chars = s2.chars();
             (
-                chars.next().expect("无法获取后部首字符。"),
-                chars.next_back().expect("无法获取后部末字符。"),
+                s2.chars().next().expect("无法获取后部首字符。"),
+                s2.chars().next_back().expect("无法获取后部末字符。"),
             )
         };
 
@@ -139,12 +138,12 @@ impl RouteConnector {
                 }
 
                 // 连接
-                s1_chars.append(&mut s2_chars);
-                let route: String = s1_chars.iter().collect();
                 let mut mid_str = String::new();
                 mid_str.push(s1_chars[s1_chars.len() - 1]);
                 mid_str.push(s2_chars[0]);
                 let time_cost = mod_t1 + mod_t2 + self.get_time(&mid_str);
+                s1_chars.append(&mut s2_chars);
+                let route: String = s1_chars.iter().collect();
                 (route, time_cost)
             }
             _ => panic!("未知的连接方法代号。"),

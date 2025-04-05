@@ -21,7 +21,7 @@ pub(crate) fn load_dict(
     if dict.is_empty() {
         return Err("词库为空");
     }
-    println!("处理完成。共{}个最优条目。", dict.len());
+    println!("处理完成。首字共覆盖{}个字。", dict.len());
     Ok((dict, max_word_len))
 }
 

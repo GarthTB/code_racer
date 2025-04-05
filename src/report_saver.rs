@@ -12,7 +12,10 @@ fn get_unique_path(text_path: &PathBuf) -> Result<String, &'static str> {
         new_name = format!("{prefix}_编码报告_{i}.txt");
         i += 1;
     }
-    Ok(new_name)
+    match dir.join(&new_name).to_str() {
+        Some(path) => Ok(path.to_string()),
+        None => Err("无法生成唯一的报告文件路径"),
+    }
 }
 
 pub(crate) fn save_to_file(

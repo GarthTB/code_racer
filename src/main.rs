@@ -11,6 +11,7 @@ fn main() {
     println!("欢迎使用code_racer赛码器！");
     println!("版本号：0.1.0 (20250406)");
     println!("作者：GarthTB <g-art-h@outlook.com>");
+    println!("源码：https://github.com/GarthTB/code_racer");
 
     fn exit_with_error<T>(message: &str) -> T {
         println!("程序异常中止！错误信息：{message}");
@@ -29,10 +30,11 @@ fn main() {
     let (text, text_path) = console_reader::get_text();
 
     // 创建缓冲区，开始编码
-    let buffer_size = std::cmp::max(256, max_word_len + 1);
+    let buffer_size = 256.max(max_word_len + 1);
     let buffer =
         route_buffer::RouteBuffer::new(buffer_size, connector).unwrap_or_else(exit_with_error);
-    let (route, time_cost) = text_encoder::encode_text(&text, dict, buffer);
+    let (route, time_cost) =
+        text_encoder::encode(&text, dict, buffer).unwrap_or_else(exit_with_error);
 
     // 输出报告
     let report = code_analyzer::analyze(layout, text.len(), route, time_cost);

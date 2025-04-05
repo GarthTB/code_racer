@@ -9,7 +9,7 @@ pub(crate) fn load_dict(
     path: &PathBuf,
     mut punct_items: Vec<(String, String, usize)>,
     connector: &RouteConnector,
-) -> Result<HashMap<char, HashMap<String, (String, f64)>>, &'static str> {
+) -> Result<(HashMap<char, HashMap<String, (String, f64)>>, usize), &'static str> {
     println!("读取词库文件...");
     let file = File::open(path).map_err(|_| "无法打开词库文件")?;
     let mut dict_items = read_dict_items(file)?;
@@ -17,12 +17,12 @@ pub(crate) fn load_dict(
     println!("结合标点符号排序并生成翻页、选重信息...");
     sort_items(&mut dict_items);
     sort_items(&mut punct_items);
-    let dict = convert_items(dict_items, punct_items, connector)?;
+    let (dict, max_word_len) = convert_items(dict_items, punct_items, connector);
     if dict.is_empty() {
         return Err("词库为空");
     }
     println!("处理完成。共{}个最优条目。", dict.len());
-    Ok(dict)
+    Ok((dict, max_word_len))
 }
 
 /// 将词库文件中的一行解析为(词组, 编码, 优先级)
@@ -63,7 +63,7 @@ fn convert_items(
     dict_items: Vec<(String, String, usize)>, // 已经过排序，优先级无用
     punct_items: Vec<(String, String, usize)>, // 已经过排序，优先级无用
     connector: &RouteConnector,
-) -> Result<HashMap<char, HashMap<String, (String, f64)>>, &'static str> {
+) -> (HashMap<char, HashMap<String, (String, f64)>>, usize) {
     // 生成唯一编码的方法
     let length = dict_items.len() + punct_items.len();
     let mut used_codes = HashSet::with_capacity(length);
@@ -87,9 +87,11 @@ fn convert_items(
         code
     };
 
-    // 装填词库的方法
+    // 装填词库，并记录最长的词组长度的方法
+    let mut max_word_len = 0;
     let mut dict: HashMap<char, HashMap<String, (String, f64)>> = HashMap::with_capacity(65536);
     let mut fill_dict = |word: String, code: String| {
+        max_word_len = max_word_len.max(word.chars().count()); // 记录最长的词组长度
         let real_code = get_code(&code);
         let time = connector.get_time(&real_code);
         let key = word.chars().next().expect("装填词库时遇到词组为空");
@@ -117,5 +119,5 @@ fn convert_items(
         fill_dict(punct, code);
     }
 
-    Ok(dict)
+    (dict, max_word_len)
 }

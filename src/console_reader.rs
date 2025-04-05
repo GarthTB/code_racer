@@ -29,14 +29,14 @@ pub(crate) fn get_connector(time_map: HashMap<String, f64>) -> RouteConnector {
 pub(crate) fn get_dict(
     punct_items: Vec<(String, String, usize)>,
     connector: &RouteConnector,
-) -> HashMap<char, HashMap<String, (String, f64)>> {
+) -> (HashMap<char, HashMap<String, (String, f64)>>, usize) {
     println!("请输入词库文件路径：");
     loop {
         let path = PathBuf::from(read());
         match path.exists() {
             true => match dict_loader::load_dict(&path, punct_items.clone(), connector) {
-                Ok(dict) => return dict,
-                Err(e) => println!("{}。请重新输入。", e),
+                Ok((dict, max_word_len)) => return (dict, max_word_len),
+                Err(e) => println!("{e}。请重新输入。"),
             },
             false => println!("文件不存在。请重新输入。"),
         }

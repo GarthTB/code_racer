@@ -115,7 +115,6 @@ pub(crate) fn analyze(
 
     let count_3_chars = |c1: char, c2: char, c3: char| {
         if c1 == c2 && c2 == c3 {
-            double_count.fetch_sub(1, Ordering::Relaxed);
             triple_count.fetch_add(1, Ordering::Relaxed);
         } else if turns(c1, c2, c3) {
             turns_count.fetch_add(1, Ordering::Relaxed);
@@ -137,8 +136,6 @@ pub(crate) fn analyze(
             && chars[i - 2] == chars[i - 1]
             && chars[i - 1] == chars[i]
         {
-            double_count.fetch_sub(1, Ordering::Relaxed);
-            triple_count.fetch_sub(1, Ordering::Relaxed);
             quadruple_count.fetch_add(1, Ordering::Relaxed);
         }
         if i > 3
@@ -147,9 +144,6 @@ pub(crate) fn analyze(
             && chars[i - 2] == chars[i - 1]
             && chars[i - 1] == chars[i]
         {
-            double_count.fetch_sub(1, Ordering::Relaxed);
-            triple_count.fetch_sub(1, Ordering::Relaxed);
-            quadruple_count.fetch_sub(1, Ordering::Relaxed);
             quintuple_count.fetch_add(1, Ordering::Relaxed);
         }
     });
@@ -182,6 +176,15 @@ pub(crate) fn analyze(
         )
     };
 
+    let real_quintuple_count = quintuple_count.load(Ordering::Relaxed);
+    let real_quadruple_count = quadruple_count.load(Ordering::Relaxed) - real_quintuple_count;
+    let real_triple_count =
+        triple_count.load(Ordering::Relaxed) - real_quintuple_count - real_quadruple_count;
+    let real_double_count = double_count.load(Ordering::Relaxed)
+        - real_quintuple_count
+        - real_quadruple_count
+        - real_triple_count;
+
     vec![
         route,
         "---以上为最优编码路径，以下为完整分析结果---".to_string(),
@@ -212,9 +215,9 @@ pub(crate) fn analyze(
         gen_report("同指跨2排", 2, m_leap_count.load(Ordering::Relaxed)),
         gen_report("同指跨3排", 2, l_leap_count.load(Ordering::Relaxed)),
         gen_report("左右互击", 3, turns_count.load(Ordering::Relaxed)),
-        gen_report("同键2连击", 2, double_count.load(Ordering::Relaxed)),
-        gen_report("同键3连击", 3, triple_count.load(Ordering::Relaxed)),
-        gen_report("同键4连击", 4, quadruple_count.load(Ordering::Relaxed)),
-        gen_report("同键+连击", 5, quintuple_count.load(Ordering::Relaxed)),
+        gen_report("同键2连击", 2, real_double_count),
+        gen_report("同键3连击", 3, real_triple_count),
+        gen_report("同键4连击", 4, real_quadruple_count),
+        gen_report("同键+连击", 5, real_quintuple_count),
     ]
 }

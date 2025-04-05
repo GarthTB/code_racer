@@ -1,7 +1,7 @@
 use crate::route_connector::RouteConnector;
 use std::collections::HashMap;
 
-struct RouteBuffer {
+pub(crate) struct RouteBuffer {
     /// 编码路径缓冲区：索引为编码终点的字符位置，HashMap的键为编码，值为当量
     buffer: Vec<HashMap<String, f64>>,
     /// 编码路径连接器
@@ -60,9 +60,9 @@ impl RouteBuffer {
     }
 
     /// 在当前位置连接编码
-    pub(crate) fn connect_code(&mut self, length: usize, tail_code: &str, tail_time: f64) {
+    pub(crate) fn connect_code(&mut self, word_len: usize, tail_code: &str, tail_time: f64) {
         // 取出当前位置的最优路径
-        let index = (self.head + length) % self.buffer.len();
+        let index = (self.head + word_len) % self.buffer.len();
         let mut best_route = self.get_local_best_route();
 
         // 如果路径太长，且当前集合就是唯一集合（全局最优路径），则暂存
@@ -84,8 +84,8 @@ impl RouteBuffer {
         self.buffer[index].insert(code, time);
 
         // 更新最远终点位置
-        if self.distance < length {
-            self.distance = length;
+        if self.distance < word_len {
+            self.distance = word_len;
         }
     }
 

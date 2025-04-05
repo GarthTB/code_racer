@@ -65,8 +65,8 @@ fn convert_items(
     connector: &RouteConnector,
 ) -> (HashMap<char, HashMap<String, (String, f64)>>, usize) {
     // 生成唯一编码的方法
-    let length = dict_items.len() + punct_items.len();
-    let mut used_codes = HashSet::with_capacity(length);
+    let count = dict_items.len() + punct_items.len();
+    let mut used_codes = HashSet::with_capacity(count);
     let id_char = vec!['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     let mut get_code = |code: &str| {
         let mut code = code.to_string();

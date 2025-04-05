@@ -3,7 +3,7 @@ use crate::route_connector::RouteConnector;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-pub(crate) fn read() -> String {
+pub(crate) fn read_line() -> String {
     let mut input = String::new();
     loop {
         match std::io::stdin().read_line(&mut input) {
@@ -17,7 +17,7 @@ pub(crate) fn get_connector(time_map: HashMap<String, f64>) -> RouteConnector {
     println!("请输入连接方法代号：");
     println!("0: 空格或符号; 1: 无间隔; 2: 键道顶功");
     loop {
-        if let Ok(code) = read().parse() {
+        if let Ok(code) = read_line().parse() {
             if code < 3 {
                 return RouteConnector::new(time_map, code);
             }
@@ -32,25 +32,25 @@ pub(crate) fn get_dict(
 ) -> (HashMap<char, HashMap<String, (String, f64)>>, usize) {
     println!("请输入词库文件路径：");
     loop {
-        let path = PathBuf::from(read());
+        let path = PathBuf::from(read_line());
         match path.exists() {
             true => match dict_loader::load_dict(&path, punct_items.clone(), connector) {
                 Ok((dict, max_word_len)) => return (dict, max_word_len),
-                Err(e) => println!("{e}。请重新输入。"),
+                Err(message) => println!("{message}。请重新输入。"),
             },
             false => println!("文件不存在。请重新输入。"),
         }
     }
 }
 
-pub(crate) fn get_text() -> Vec<char> {
+pub(crate) fn get_text() -> (Vec<char>, PathBuf) {
     println!("请输入待编码文本文件路径：");
     loop {
-        let path = PathBuf::from(read());
+        let path = PathBuf::from(read_line());
         match path.exists() {
-            true => match std::fs::read_to_string(path) {
+            true => match std::fs::read_to_string(&path) {
                 Ok(text) => match text.is_empty() {
-                    false => return text.chars().collect(),
+                    false => return (text.chars().collect(), path),
                     true => println!("文件为空。请重新输入。"),
                 },
                 Err(_) => println!("无法读取文件。请重新输入。"),

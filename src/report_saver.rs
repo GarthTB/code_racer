@@ -17,7 +17,7 @@ fn get_unique_path(text_path: &PathBuf) -> Result<String, &'static str> {
 
 pub(crate) fn save_to_file(
     text_path: &PathBuf,
-    report: Vec<String>,
+    report: &Vec<String>,
 ) -> Result<String, &'static str> {
     let unique_path = get_unique_path(text_path)?;
     let mut file = File::create(&unique_path).map_err(|_| "无法创建报告文件")?;

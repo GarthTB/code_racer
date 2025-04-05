@@ -58,7 +58,7 @@ impl RouteConnector {
             )
         };
 
-        let directly = || {
+        let directly = {
             let s: String = s1.chars().chain(s2.chars()).collect();
             let mut m = String::with_capacity(2);
             m.push(s1_last);
@@ -67,7 +67,7 @@ impl RouteConnector {
             (s, t)
         };
 
-        let directly_with_space = || {
+        let directly_with_space = {
             let mut s = s1.to_string();
             s.push(' ');
             s.push_str(s2);
@@ -84,16 +84,16 @@ impl RouteConnector {
                 if t1 == 0.0 {
                     (s2.to_string(), t2)
                 } else if a.contains(s1_last) && (a.contains(s2_first) || n.contains(s2_first)) {
-                    directly_with_space() // 字母 + (字母或数字)，则加空格
+                    directly_with_space // 字母 + (字母或数字)，则加空格
                 } else {
-                    directly()
+                    directly
                 }
             }
             1 => {
                 if t1 == 0.0 {
                     (s2.to_string(), t2)
                 } else {
-                    directly()
+                    directly
                 }
             }
             2 => {

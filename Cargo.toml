@@ -11,3 +11,4 @@ categories = ["command-line-utilities"]
 keywords = ["keyboard-layout", "typing-speed", "input-method", "chinese-input"]
 
 [dependencies]
+rayon = "1.10.0"

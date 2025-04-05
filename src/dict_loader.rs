@@ -6,22 +6,26 @@ use std::path::PathBuf;
 
 /// 返回按首字符分组的词库，子词库中的键为词组，值为(编码, 击键当量)
 pub(crate) fn load_dict(
-    path: PathBuf,
+    path: &PathBuf,
     mut punct_items: Vec<(String, String, usize)>,
     connector: &RouteConnector,
 ) -> Result<HashMap<char, HashMap<String, (String, f64)>>, &'static str> {
     println!("读取词库文件...");
-    let file = File::open(&path).map_err(|_| "无法打开词库文件")?;
+    let file = File::open(path).map_err(|_| "无法打开词库文件")?;
     let mut dict_items = read_dict_items(file)?;
     println!("读取完成。共{}个条目。", dict_items.len());
     println!("结合标点符号排序并生成翻页、选重信息...");
     sort_items(&mut dict_items);
     sort_items(&mut punct_items);
     let dict = convert_items(dict_items, punct_items, connector)?;
+    if dict.is_empty() {
+        return Err("词库为空");
+    }
     println!("处理完成。共{}个最优条目。", dict.len());
     Ok(dict)
 }
 
+/// 将词库文件中的一行解析为(词组, 编码, 优先级)
 pub(crate) fn parse_dict_line(items: &mut Vec<(String, String, usize)>, line: &str) {
     let line = line.split('#').next().expect("无法解析文件中的注释");
     let parts: Vec<&str> = line.split('\t').collect();

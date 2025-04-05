@@ -8,7 +8,7 @@ pub(crate) struct RouteConnector {
 }
 
 impl RouteConnector {
-    fn new(time_map: HashMap<String, f64>, method_code: usize) -> RouteConnector {
+    pub(crate) fn new(time_map: HashMap<String, f64>, method_code: usize) -> RouteConnector {
         RouteConnector {
             time_map,
             method_code,

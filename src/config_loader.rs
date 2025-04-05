@@ -19,6 +19,21 @@ pub(crate) fn load_layout() -> Result<Vec<String>, &'static str> {
     Ok(layout_lines)
 }
 
+pub(crate) fn load_punct_items() -> Result<Vec<(String, String, usize)>, &'static str> {
+    println!("加载标点符号配置...");
+    let punct_path = get_config_path("punct_dict.txt")?;
+    let punct_file = File::open(&punct_path).map_err(|_| "无法打开标点符号文件")?;
+
+    let mut items = Vec::with_capacity(32);
+    for line in BufReader::new(punct_file).lines() {
+        let line = line.map_err(|_| "无法读取标点符号文件中的一行")?;
+        crate::dict_loader::parse_dict_line(&mut items, &line);
+    }
+
+    println!("加载完成。默认为24行，实际为{}行。", items.len());
+    Ok(items)
+}
+
 pub(crate) fn load_time_cost() -> Result<HashMap<String, f64>, &'static str> {
     println!("加载击键当量配置...");
     let time_cost_path = get_config_path("time_cost.txt")?;
@@ -41,19 +56,4 @@ pub(crate) fn load_time_cost() -> Result<HashMap<String, f64>, &'static str> {
 
     println!("加载完成。默认为2116行，实际为{}行。", time_cost_map.len());
     Ok(time_cost_map)
-}
-
-pub(crate) fn load_punct_items() -> Result<Vec<(String, String, usize)>, &'static str> {
-    println!("加载标点符号配置...");
-    let punct_path = get_config_path("punct_dict.txt")?;
-    let punct_file = File::open(&punct_path).map_err(|_| "无法打开标点符号文件")?;
-
-    let mut items = Vec::with_capacity(32);
-    for line in BufReader::new(punct_file).lines() {
-        let line = line.map_err(|_| "无法读取标点符号文件中的一行")?;
-        crate::dict_loader::parse_dict_line(&mut items, &line);
-    }
-
-    println!("加载完成。默认为24行，实际为{}行。", items.len());
-    Ok(items)
 }

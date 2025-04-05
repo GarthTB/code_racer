@@ -15,7 +15,7 @@ struct RouteBuffer {
 }
 
 impl RouteBuffer {
-    fn new(size: usize, connector: RouteConnector) -> Result<Self, &'static str> {
+    pub(crate) fn new(size: usize, connector: RouteConnector) -> Result<Self, &'static str> {
         if size == 0 {
             Err("编码路径缓冲区大小不能为0")
         } else {
@@ -40,7 +40,7 @@ impl RouteBuffer {
         self.distance = 0;
     }
 
-    fn next(&mut self) {
+    pub(crate) fn next(&mut self) {
         self.buffer[self.head].clear();
         self.head = (self.head + 1) % self.buffer.len();
         self.distance -= 1;
@@ -60,7 +60,7 @@ impl RouteBuffer {
     }
 
     /// 在当前位置连接编码
-    fn connect_code(&mut self, length: usize, tail_code: &str, tail_time: f64) {
+    pub(crate) fn connect_code(&mut self, length: usize, tail_code: &str, tail_time: f64) {
         // 取出当前位置的最优路径
         let index = (self.head + length) % self.buffer.len();
         let mut best_route = self.get_local_best_route();
@@ -90,7 +90,7 @@ impl RouteBuffer {
     }
 
     /// 获取全局最优路径
-    fn get_global_best_route(&self) -> Result<(String, f64), &'static str> {
+    pub(crate) fn get_global_best_route(&self) -> Result<(String, f64), &'static str> {
         if self.buffer[self.head].is_empty() {
             Err("编码无法到达文本尾部")
         } else if self.distance != 0 {

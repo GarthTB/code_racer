@@ -3,15 +3,15 @@ use std::collections::HashMap;
 
 pub(crate) fn encode(
     text: &Vec<char>,
-    dict: HashMap<char, HashMap<String, (String, f64)>>,
+    dict: HashMap<char, Vec<(String, String, f64)>>,
     mut buffer: RouteBuffer,
 ) -> Result<(String, f64), &'static str> {
     println!("共需计算{}字。计算编码...", text.len());
     for i in 0..text.len() {
         if let Some(sub_dict) = dict.get(&text[i]) {
-            for (word, (code, time)) in sub_dict {
+            for (word, code, time) in sub_dict {
                 let chars: Vec<char> = word.chars().collect();
-                if i + chars.len() <= text.len() && chars == text[i..i + chars.len()] {
+                if text[i..].starts_with(&chars) {
                     buffer.connect_code(chars.len(), code, *time)
                 }
             }

@@ -30,7 +30,7 @@ fn main() {
     let (text, text_path) = console_reader::get_text();
 
     // 创建缓冲区，开始编码
-    let buffer_size = 256.max(max_word_len + 1);
+    let buffer_size = 256.max(text.len().min(max_word_len));
     let buffer =
         route_buffer::RouteBuffer::new(buffer_size, connector).unwrap_or_else(exit_with_error);
     let (route, time_cost) =

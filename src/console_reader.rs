@@ -29,7 +29,7 @@ pub(crate) fn get_connector(time_map: HashMap<String, f64>) -> RouteConnector {
 pub(crate) fn get_dict(
     punct_items: Vec<(String, String, usize)>,
     connector: &RouteConnector,
-) -> (HashMap<char, HashMap<String, (String, f64)>>, usize) {
+) -> (HashMap<char, Vec<(String, String, f64)>>, usize) {
     println!("请输入词库文件路径：");
     loop {
         let path = PathBuf::from(read_line());

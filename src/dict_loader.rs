@@ -9,7 +9,7 @@ pub(crate) fn load_dict(
     path: &PathBuf,
     mut punct_items: Vec<(String, String, usize)>,
     connector: &RouteConnector,
-) -> Result<(HashMap<char, HashMap<String, (String, f64)>>, usize), &'static str> {
+) -> Result<(HashMap<char, Vec<(String, String, f64)>>, usize), &'static str> {
     println!("读取词库文件...");
     let file = File::open(path).map_err(|_| "无法打开词库文件")?;
     let mut dict_items = read_dict_items(file)?;
@@ -63,7 +63,7 @@ fn convert_items(
     dict_items: Vec<(String, String, usize)>, // 已经过排序，优先级无用
     punct_items: Vec<(String, String, usize)>, // 已经过排序，优先级无用
     connector: &RouteConnector,
-) -> (HashMap<char, HashMap<String, (String, f64)>>, usize) {
+) -> (HashMap<char, Vec<(String, String, f64)>>, usize) {
     // 生成唯一编码的方法
     let count = dict_items.len() + punct_items.len();
     let mut used_codes = HashSet::with_capacity(count);
@@ -87,7 +87,7 @@ fn convert_items(
         code
     };
 
-    // 装填词库，并记录最长的词组长度的方法
+    // 装填词库，并记录最长词组长度的方法
     let mut max_word_len = 0;
     let mut dict: HashMap<char, HashMap<String, (String, f64)>> = HashMap::with_capacity(65536);
     let mut fill_dict = |word: String, code: String| {
@@ -119,5 +119,20 @@ fn convert_items(
         fill_dict(punct, code);
     }
 
-    (dict, max_word_len)
+    // 将HashMap转换为Vec
+    let mut count = 0;
+    let flat_dict: HashMap<char, Vec<(String, String, f64)>> = dict
+        .into_iter()
+        .map(|(key, sub_dict)| {
+            let sub_vec: Vec<(String, String, f64)> = sub_dict
+                .into_iter()
+                .map(|(word, (code, time))| (word, code, time))
+                .collect();
+            count += sub_vec.len();
+            (key, sub_vec)
+        })
+        .collect();
+    println!("词库装填完成。共{}个最优条目。", count);
+
+    (flat_dict, max_word_len)
 }

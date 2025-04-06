@@ -23,7 +23,7 @@ pub(crate) fn analyze(
             format!("字数\t{}", text_len),
             format!("码数\t{}", chars.len()),
             format!("当量\t{:.1}", time_cost),
-            format!("字均码长\t{:.4}", code_len),
+            format!("字均码长\t{:.8}", code_len),
             format!("字均当量\t{:.4}", time_per_char),
             format!("码均当量\t{:.4}", time_per_key),
         ];
@@ -191,7 +191,7 @@ pub(crate) fn analyze(
         format!("字数\t{}", text_len),
         format!("码数\t{}", chars.len()),
         format!("当量\t{:.1}", time_cost),
-        format!("字均码长\t{:.4}", code_len),
+        format!("字均码长\t{:.8}", code_len),
         format!("字均当量\t{:.4}", time_per_char),
         format!("码均当量\t{:.4}", time_per_key),
         gen_report("总左手", 1, left_count),

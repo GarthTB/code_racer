@@ -49,15 +49,20 @@ impl RouteBuffer {
         self.connected = false;
     }
 
-    /// 获取当前位置当量最小的路径
+    /// 获取当前位置当量最小、码长最短的路径
     fn get_local_best_route(&self) -> (String, f64) {
         if self.buffer[self.head].is_empty() {
             (String::new(), 0.0)
         } else {
             let (code, time) = self.buffer[self.head]
                 .iter()
-                .min_by(|a, b| a.1.partial_cmp(&b.1).expect("路径当量中存在NaN"))
-                .expect("无法获取最优路径");
+                .min_by(|a, b| {
+                    a.1.partial_cmp(&b.1)
+                        .expect("路径当量中存在NaN")
+                        .then(a.0.len().cmp(&b.0.len()))
+                        .then(a.0.cmp(&b.0))
+                })
+                .expect("无法获取局部最优路径");
             (code.clone(), *time)
         }
     }

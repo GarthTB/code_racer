@@ -121,7 +121,7 @@ fn convert_items(
 
     // 将HashMap转换为Vec
     let mut count = 0;
-    let flat_dict: HashMap<char, Vec<(String, String, f64)>> = dict
+    let flat_dict = dict
         .into_iter()
         .map(|(key, sub_dict)| {
             let sub_vec: Vec<(String, String, f64)> = sub_dict

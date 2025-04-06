@@ -21,8 +21,7 @@ impl RouteBuffer {
         if size == 0 {
             Err("编码路径缓冲区大小不能为0")
         } else {
-            let mut buffer = vec![HashMap::new(); size];
-            buffer[0].insert(String::new(), 0.0);
+            let buffer = vec![HashMap::new(); size];
             Ok(RouteBuffer {
                 buffer,
                 connector,
@@ -38,7 +37,6 @@ impl RouteBuffer {
         for i in 0..self.buffer.len() {
             self.buffer[i].clear();
         }
-        self.buffer[0].insert(String::new(), 0.0);
         self.head = 0;
         self.distance = 0;
         self.connected = false;
@@ -67,7 +65,6 @@ impl RouteBuffer {
     /// 在当前位置连接编码
     pub(crate) fn connect_code(&mut self, word_len: usize, tail_code: &str, tail_time: f64) {
         // 取出当前位置的最优路径
-        let index = (self.head + word_len) % self.buffer.len();
         let mut best_route = self.get_local_best_route();
 
         // 如果路径太长，且当前集合就是唯一集合（全局最优路径），则暂存
@@ -83,6 +80,7 @@ impl RouteBuffer {
         }
 
         // 连接编码
+        let index = (self.head + word_len) % self.buffer.len();
         let (code, time) =
             self.connector
                 .connect(&best_route.0, best_route.1, tail_code, tail_time);

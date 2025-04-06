@@ -1,6 +1,6 @@
 [package]
 name = "code_racer"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["GarthTB <g-art-h@outlook.com>"]
 edition = "2024"
 description = "计算输入整篇文章所需最小当量的工具"

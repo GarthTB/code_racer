@@ -1,7 +1,7 @@
 # [code_racer 🐎 赛码器](https://github.com/GarthTB/code_racer)
 
 [![Language](https://img.shields.io/badge/Built%20with-Rust-brown)](https://www.rust-lang.org/zh-CN/)
-[![Version](https://img.shields.io/badge/Latest%20Release-0.1.0-brightgreen)](https://github.com/GarthTB/code_racer/releases)
+[![Version](https://img.shields.io/badge/Latest%20Release-0.2.0-brightgreen)](https://github.com/GarthTB/code_racer/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)
 
 轻松计算字数上十万的文本在自定义的键盘布局下、用特定输入法时，击键时间当量[1]最小的打法，并简单分析这个最优的编码。
@@ -55,6 +55,13 @@
 - [1]陈一凡,张鹿,周志农.键位相关速度当量的研究[J].中文信息学报,1990,(04):12-18+11.
 
 ## 发布日志
+
+### v0.2.0 - 20250406
+
+- 修复：跳过部分编码的问题
+- 修复：连击数统计错乱的问题
+- 修复：标点符号配置文件错误
+- 优化：略微提升性能
 
 ### v0.1.0 - 20250406
 

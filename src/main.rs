@@ -9,7 +9,7 @@ mod text_encoder;
 
 fn main() {
     println!("欢迎使用code_racer赛码器！");
-    println!("版本号：0.1.0 (20250406)");
+    println!("版本号：0.2.0 (20250406)");
     println!("作者：GarthTB <g-art-h@outlook.com>");
     println!("源码：https://github.com/GarthTB/code_racer");
 

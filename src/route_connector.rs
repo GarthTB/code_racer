@@ -41,7 +41,7 @@ impl RouteConnector {
     }
 
     pub(crate) fn connect(&mut self, s1: &str, s2: &str, t1: f64, t2: f64) -> (String, f64) {
-        // 取出前部末字符、后部首字符、后部末字符
+        // 取出前部的末字符、后部首字符、后部的末字符
         let s1_last = if s1.is_empty() {
             '\0'
         } else {
@@ -115,7 +115,7 @@ impl RouteConnector {
                 }
                 // 没有上文：直接返回
                 if s1.is_empty() {
-                    return (s2_chars.iter().collect(), mod_t2);
+                    return (s2_chars.into_iter().collect(), mod_t2);
                 }
 
                 let mut s1_chars: Vec<char> = s1.chars().collect();
@@ -141,7 +141,7 @@ impl RouteConnector {
                 let mid = vec![s1_chars[s1_chars.len() - 1], s2_chars[0]];
                 let time = mod_t1 + mod_t2 + self.get_time(&mid);
                 s1_chars.append(&mut s2_chars);
-                (s1_chars.iter().collect(), time)
+                (s1_chars.into_iter().collect(), time)
             }
             _ => panic!("未知的连接方法代号。"),
         }

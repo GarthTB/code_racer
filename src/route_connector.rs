@@ -31,7 +31,7 @@ impl RouteConnector {
         self.unknown_keys.len()
     }
 
-    pub(crate) fn report_unknown_keys(&mut self, text_path: &PathBuf) {
+    pub(crate) fn report_unknown_keys(&self, text_path: &PathBuf) {
         let content = self
             .unknown_keys
             .iter()

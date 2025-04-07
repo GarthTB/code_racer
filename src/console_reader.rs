@@ -1,7 +1,6 @@
 use crate::dict_loader::load_dict;
 use crate::route_connector::RouteConnector;
 use std::collections::{HashMap, HashSet};
-use std::fs::File;
 use std::path::PathBuf;
 
 pub(crate) fn read_line() -> String {
@@ -44,21 +43,12 @@ pub(crate) fn get_dict(
     }
 }
 
-pub(crate) fn get_text() -> File {
+pub(crate) fn get_text_path() -> PathBuf {
     println!("请输入待编码文本文件路径：");
     loop {
         let path = PathBuf::from(read_line());
         match path.exists() {
-            true => match File::create(&path) {
-                Ok(file) => match file.metadata() {
-                    Ok(metadata) => match metadata.len() > 0 {
-                        true => return file,
-                        false => println!("文件为空。请重新输入。"),
-                    },
-                    Err(message) => println!("无法获取文件信息。错误信息：{message}。请重新输入。"),
-                },
-                Err(message) => println!("无法读取文件。错误信息：{message}。请重新输入。"),
-            },
+            true => return path,
             false => println!("文件不存在。请重新输入。"),
         }
     }

@@ -44,7 +44,7 @@ impl RouteBuffer {
     }
 
     /// 导出找不到当量的按键组合
-    pub(crate) fn report_unknown_keys(&mut self, text_path: &PathBuf) {
+    pub(crate) fn report_unknown_keys(&self, text_path: &PathBuf) {
         self.connector.report_unknown_keys(text_path);
     }
 

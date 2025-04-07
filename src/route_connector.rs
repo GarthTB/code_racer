@@ -131,10 +131,8 @@ impl RouteConnector {
                 // 新码以形码或数字开头，且上文末尾为字母：在上文末尾加空格
                 else if a.contains(s1_last) && (x.contains(s2_first) || n.contains(s2_first)) {
                     s1_chars.push(' ');
-                    if s1_chars.len() > 1 {
-                        let new_part: String = s1_chars[s1_chars.len() - 2..].iter().collect();
-                        mod_t1 += self.get_time(&new_part);
-                    }
+                    let new_part: String = s1_chars[s1_chars.len() - 2..].iter().collect();
+                    mod_t1 += self.get_time(&new_part);
                 }
 
                 // 连接

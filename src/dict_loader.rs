@@ -80,6 +80,7 @@ fn convert_items(
             } else {
                 code.pop();
                 code.push('='); // 翻页符
+                i = 1;
             }
             i += 1;
         }

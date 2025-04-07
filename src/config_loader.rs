@@ -23,7 +23,7 @@ pub(crate) fn load_punct_items() -> Result<HashSet<(String, String, usize)>, &'s
     println!("加载标点符号配置...");
     let punct_path = get_config_path("punct_dict.txt")?;
     let punct_file = File::open(&punct_path).map_err(|_| "无法打开标点符号文件")?;
-    let items = crate::dict_loader::read_rime_file(punct_file, 32);
+    let items = crate::dict_loader::read_rime_file(punct_file, 32)?;
     println!("加载完成。默认为30项，实际为{}项。", items.len());
     Ok(items)
 }

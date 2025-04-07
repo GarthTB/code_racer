@@ -22,30 +22,23 @@ fn main() {
     // 加载配置文件
     let layout = config_loader::load_layout().unwrap_or_else(exit_with_error);
     let punct_items = config_loader::load_punct_items().unwrap_or_else(exit_with_error);
-    let time_map = config_loader::load_time_cost().unwrap_or_else(exit_with_error);
+    let time_map = config_loader::load_time_map().unwrap_or_else(exit_with_error);
 
     // 读取输入并加载其余配置
     let connector = console_reader::get_connector(time_map);
-    let (dict, max_word_len) = console_reader::get_dict(punct_items, &connector);
-    let (text, text_path) = console_reader::get_text();
+    let (dict, max_word_len) = console_reader::get_dict(punct_items, connector.clone());
+    let text_path = console_reader::get_text_path();
 
     // 创建缓冲区，开始编码
-    let buffer_size = 16.max(text.len().min(max_word_len));
+    let buffer_size = 16.max(max_word_len);
     let buffer =
         route_buffer::RouteBuffer::new(buffer_size, connector).unwrap_or_else(exit_with_error);
-    let (route, time_cost) =
-        text_encoder::encode(&text, dict, buffer).unwrap_or_else(exit_with_error);
+    let (text_len, route, time) =
+        text_encoder::encode(&text_path, dict, buffer).unwrap_or_else(exit_with_error);
 
     // 输出报告
-    let report = code_analyzer::analyze(layout, text.len(), route, time_cost);
-    match report_saver::save_to_file(&text_path, &report) {
-        Ok(path) => println!("报告已保存至：{path}"),
-        Err(message) => {
-            println!("无法将报告保存至文件！错误信息：{message}");
-            println!("将直接输出到控制台...");
-            report_saver::print_to_console(report);
-        }
-    }
+    let report = code_analyzer::analyze(layout, text_len, route, time);
+    report_saver::save(&text_path, "最小当量编码报告", report);
 
     // 等待用户输入
     println!("程序执行完毕。按回车键退出...");

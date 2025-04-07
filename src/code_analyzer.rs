@@ -6,13 +6,13 @@ pub(crate) fn analyze(
     layout: Vec<String>,
     text_len: usize,
     route: String,
-    time_cost: f64,
+    time: f64,
 ) -> Vec<String> {
     // 简单分析
     let chars: Vec<char> = route.chars().collect();
     let code_len = chars.len() as f64 / text_len as f64;
-    let time_per_char = time_cost / text_len as f64;
-    let time_per_key = time_cost / chars.len() as f64;
+    let time_per_char = time / text_len as f64;
+    let time_per_key = time / chars.len() as f64;
 
     // 简单返回
     if layout.len() != 14 {
@@ -22,46 +22,26 @@ pub(crate) fn analyze(
             "---以上为最优编码路径，以下为简单分析结果---".to_string(),
             format!("字数\t{}", text_len),
             format!("码数\t{}", chars.len()),
-            format!("当量\t{:.1}", time_cost),
+            format!("当量\t{:.1}", time),
             format!("字均码长\t{:.8}", code_len),
             format!("字均当量\t{:.4}", time_per_char),
             format!("码均当量\t{:.4}", time_per_key),
         ];
     }
 
-    // 完整分析的方法和变量
+    // 完整分析的变量和方法
     let mut parts_count = Vec::with_capacity(14); // 每组码的计数
+    for _ in 0..14 {
+        parts_count.push(AtomicUsize::new(0));
+    }
     let s_leap_count = AtomicUsize::new(0); // 同指跨1排
     let m_leap_count = AtomicUsize::new(0); // 同指跨2排
     let l_leap_count = AtomicUsize::new(0); // 同指跨3排
-    let turns_count = AtomicUsize::new(0); // 左右左和右左右的次数之和
     let double_count = AtomicUsize::new(0); // 同键按2次
     let triple_count = AtomicUsize::new(0); // 同键按3次
     let quadruple_count = AtomicUsize::new(0); // 同键按4次
     let quintuple_count = AtomicUsize::new(0); // 同键按5次
-
-    for _ in 0..14 {
-        parts_count.push(AtomicUsize::new(0));
-    }
-
-    let left_keys: HashSet<char> = layout[5]
-        .chars()
-        .chain(layout[6].chars())
-        .chain(layout[7].chars())
-        .chain(layout[8].chars())
-        .collect();
-
-    let right_keys: HashSet<char> = layout[9]
-        .chars()
-        .chain(layout[10].chars())
-        .chain(layout[11].chars())
-        .chain(layout[12].chars())
-        .collect();
-
-    let turns = |c1: char, c2: char, c3: char| {
-        left_keys.contains(&c1) && right_keys.contains(&c2) && left_keys.contains(&c3)
-            || right_keys.contains(&c1) && left_keys.contains(&c2) && right_keys.contains(&c3)
-    };
+    let turns_count = AtomicUsize::new(0); // 左右左 + 右左右的次数
 
     let double_contains = |c1: char, c2: char, s1: &str, s2: &str| {
         (s1.contains(c1) && s2.contains(c2)) || (s1.contains(c2) && s2.contains(c1))
@@ -90,6 +70,25 @@ pub(crate) fn analyze(
     };
 
     let l_leap = |c1: char, c2: char| double_contains(c1, c2, &layout[0], &layout[3]);
+
+    let left_keys: HashSet<char> = layout[5]
+        .chars()
+        .chain(layout[6].chars())
+        .chain(layout[7].chars())
+        .chain(layout[8].chars())
+        .collect();
+
+    let right_keys: HashSet<char> = layout[9]
+        .chars()
+        .chain(layout[10].chars())
+        .chain(layout[11].chars())
+        .chain(layout[12].chars())
+        .collect();
+
+    let turns = |c1: char, c2: char, c3: char| {
+        left_keys.contains(&c1) && right_keys.contains(&c2) && left_keys.contains(&c3)
+            || right_keys.contains(&c1) && left_keys.contains(&c2) && right_keys.contains(&c3)
+    };
 
     let count_1_char = |c: char| {
         for i in 0..14 {
@@ -160,6 +159,14 @@ pub(crate) fn analyze(
         + parts_count[11].load(Ordering::Relaxed)
         + parts_count[12].load(Ordering::Relaxed);
 
+    let mut real_double_count = double_count.load(Ordering::Relaxed);
+    let mut real_triple_count = triple_count.load(Ordering::Relaxed);
+    let mut real_quadruple_count = quadruple_count.load(Ordering::Relaxed);
+    let real_quintuple_count = quintuple_count.load(Ordering::Relaxed);
+    real_double_count -= real_triple_count;
+    real_triple_count -= real_quadruple_count;
+    real_quadruple_count -= real_quintuple_count;
+
     let gen_deviation_report = if left_count + right_count == 0 {
         "双手键数之和为0，无法计算偏倚率。".to_string()
     } else {
@@ -176,21 +183,12 @@ pub(crate) fn analyze(
         )
     };
 
-    let real_quintuple_count = quintuple_count.load(Ordering::Relaxed);
-    let real_quadruple_count = quadruple_count.load(Ordering::Relaxed) - real_quintuple_count;
-    let real_triple_count =
-        triple_count.load(Ordering::Relaxed) - real_quintuple_count - real_quadruple_count;
-    let real_double_count = double_count.load(Ordering::Relaxed)
-        - real_quintuple_count
-        - real_quadruple_count
-        - real_triple_count;
-
     vec![
         route,
         "---以上为最优编码路径，以下为完整分析结果---".to_string(),
         format!("字数\t{}", text_len),
         format!("码数\t{}", chars.len()),
-        format!("当量\t{:.1}", time_cost),
+        format!("当量\t{:.1}", time),
         format!("字均码长\t{:.8}", code_len),
         format!("字均当量\t{:.4}", time_per_char),
         format!("码均当量\t{:.4}", time_per_key),
@@ -214,10 +212,10 @@ pub(crate) fn analyze(
         gen_report("同指跨1排", 2, s_leap_count.load(Ordering::Relaxed)),
         gen_report("同指跨2排", 2, m_leap_count.load(Ordering::Relaxed)),
         gen_report("同指跨3排", 2, l_leap_count.load(Ordering::Relaxed)),
+        gen_report("两连击", 2, real_double_count),
+        gen_report("三连击", 3, real_triple_count),
+        gen_report("四连击", 4, real_quadruple_count),
+        format!("更多连击\t{real_quintuple_count}"),
         gen_report("左右互击", 3, turns_count.load(Ordering::Relaxed)),
-        gen_report("同键2连击", 2, real_double_count),
-        gen_report("同键3连击", 3, real_triple_count),
-        gen_report("同键4连击", 4, real_quadruple_count),
-        gen_report("同键+连击", 5, real_quintuple_count),
     ]
 }

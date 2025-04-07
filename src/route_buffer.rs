@@ -1,9 +1,9 @@
 use crate::route_connector::RouteConnector;
-use std::collections::HashMap;
 
+/// 编码路径缓冲区
 pub(crate) struct RouteBuffer {
-    /// 编码路径缓冲区：索引为编码终点的字符位置，HashMap的键为编码，值为当量
-    buffer: Vec<HashMap<String, f64>>,
+    /// 索引为待编码的第一个字符的位置
+    buffer: Vec<(String, f64)>,
     /// 编码路径连接器
     connector: RouteConnector,
     /// 当前位置
@@ -21,9 +21,8 @@ impl RouteBuffer {
         if size == 0 {
             Err("编码路径缓冲区大小不能为0")
         } else {
-            let buffer = vec![HashMap::new(); size];
             Ok(RouteBuffer {
-                buffer,
+                buffer: vec![(String::new(), 0.0); size],
                 connector,
                 head: 0,
                 distance: 0,
@@ -33,46 +32,34 @@ impl RouteBuffer {
         }
     }
 
-    fn clear(&mut self) {
-        for i in 0..self.buffer.len() {
-            self.buffer[i].clear();
-        }
-        self.head = 0;
-        self.distance = 0;
-        self.connected = false;
+    /// 获取是否在当前位置连接过编码
+    pub(crate) fn is_connected(&self) -> bool {
+        self.connected
     }
 
     pub(crate) fn next(&mut self) {
-        self.buffer[self.head].clear();
+        self.buffer[self.head].0.clear();
+        self.buffer[self.head].1 = 0.0;
         self.head = (self.head + 1) % self.buffer.len();
         self.distance -= 1;
         self.connected = false;
     }
 
-    /// 获取当前位置当量最小、码长最短的路径
-    fn get_local_best_route(&self) -> (String, f64) {
-        if self.buffer[self.head].is_empty() {
-            (String::new(), 0.0)
-        } else {
-            let (code, time) = self.buffer[self.head]
-                .iter()
-                .min_by(|a, b| {
-                    a.1.partial_cmp(&b.1)
-                        .expect("路径当量中存在NaN")
-                        .then(a.0.len().cmp(&b.0.len()))
-                        .then(a.0.cmp(&b.0))
-                })
-                .expect("无法获取局部最优路径");
-            (code.clone(), *time)
+    fn clear(&mut self) {
+        for i in 0..self.buffer.len() {
+            self.buffer[i].0.clear();
+            self.buffer[i].1 = 0.0;
         }
+        self.distance = 0;
+        self.connected = false;
     }
 
     /// 在当前位置连接编码
     pub(crate) fn connect_code(&mut self, word_len: usize, tail_code: &str, tail_time: f64) {
-        // 取出当前位置的最优路径
-        let mut best_route = self.get_local_best_route();
+        // 取出到当前位置的最优路径
+        let mut best_route = self.buffer[self.head].clone();
 
-        // 如果路径太长，且当前集合就是唯一集合（全局最优路径），则暂存
+        // 如果路径太长，且当前路径就是唯一路径（全局最优），则暂存并清空缓冲区
         if best_route.0.len() > 1000 && self.distance == 0 {
             self.global_best_route = self.connector.connect(
                 &self.global_best_route.0,
@@ -84,39 +71,37 @@ impl RouteBuffer {
             self.clear();
         }
 
-        // 连接编码
+        // 连接编码并更新最优路径
         let index = (self.head + word_len) % self.buffer.len();
         let (code, time) =
             self.connector
                 .connect(&best_route.0, best_route.1, tail_code, tail_time);
-        self.buffer[index].insert(code, time);
+        if self.buffer[index].0.is_empty() // 未编码过
+            || time < self.buffer[index].1 // 当量更小或同量且编码更短
+            || code.len() < self.buffer[index].0.len()
+        {
+            self.buffer[index] = (code, time);
+        }
 
         // 更新状态
         self.distance = self.distance.max(word_len);
         self.connected = true;
     }
 
-    /// 获取是否在当前位置连接过编码
-    pub(crate) fn is_connected(&self) -> bool {
-        self.connected
-    }
-
     /// 获取全局最优路径
     pub(crate) fn get_global_best_route(&self) -> Result<(String, f64), &'static str> {
-        if self.buffer[self.head].is_empty() {
-            Err("编码无法到达文本尾部")
-        } else if self.distance != 0 {
+        if self.distance != 0 {
             Err("存在超出文本尾部的编码")
         } else {
-            let (code, time) = self.get_local_best_route();
-            if code.is_empty() {
+            let best_route = self.buffer[self.head].clone();
+            if best_route.0.is_empty() {
                 Ok((self.global_best_route.0.clone(), self.global_best_route.1))
             } else {
                 Ok(self.connector.connect(
                     &self.global_best_route.0,
                     self.global_best_route.1,
-                    &code,
-                    time,
+                    &best_route.0,
+                    best_route.1,
                 ))
             }
         }

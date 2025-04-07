@@ -31,14 +31,19 @@ fn main() {
 
     // 创建缓冲区，开始编码
     let buffer_size = 16.max(max_word_len);
-    let buffer =
+    let mut buffer =
         route_buffer::RouteBuffer::new(buffer_size, connector).unwrap_or_else(exit_with_error);
     let (text_len, route, time) =
-        text_encoder::encode(&text_path, dict, buffer).unwrap_or_else(exit_with_error);
+        text_encoder::encode(&text_path, dict, &mut buffer).unwrap_or_else(exit_with_error);
 
     // 输出报告
     let report = code_analyzer::analyze(layout, text_len, route, time);
     report_saver::save(&text_path, "最小当量编码报告", report);
+    if buffer.unknown_keys_count() > 0
+        && console_reader::need_to_report_unknown_keys(buffer.unknown_keys_count())
+    {
+        buffer.report_unknown_keys(&text_path);
+    }
 
     // 等待用户输入
     println!("程序执行完毕。按回车键退出...");

@@ -6,7 +6,7 @@ use std::path::PathBuf;
 pub(crate) fn encode(
     text_path: &PathBuf,
     dict: HashMap<char, Vec<(String, String, f64)>>,
-    mut buffer: RouteBuffer,
+    buffer: &mut RouteBuffer,
 ) -> Result<(usize, String, f64), &'static str> {
     println!("计算编码...");
     let text_string = read_to_string(text_path).map_err(|_| "无法读取待编码文本文件")?;
@@ -32,7 +32,7 @@ pub(crate) fn encode(
         buffer.next();
     }
     let (route, time) = buffer.get_global_best_route()?;
-    println!("计算完成。");
+    println!("\n计算完成。");
 
     Ok((text_chars.len(), route, time))
 }

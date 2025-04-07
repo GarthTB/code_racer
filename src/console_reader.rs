@@ -53,3 +53,9 @@ pub(crate) fn get_text_path() -> PathBuf {
         }
     }
 }
+
+pub(crate) fn need_to_report_unknown_keys(count: usize) -> bool {
+    println!("是否需要输出这{count}个找不到当量的按键组合？");
+    println!("随便输入一个数字以确认；输入其他则取消...");
+    read_line().parse::<f64>().is_ok()
+}

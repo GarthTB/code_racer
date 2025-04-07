@@ -136,14 +136,17 @@ impl RouteConnector {
                 let mut s1_chars: Vec<char> = s1.chars().collect();
                 let mut mod_t1 = t1;
 
-                // 上文末尾为空格，且新码以非空格的标点开头：去掉上文末尾的空格
-                if s1_last == ' ' && s2_first != ' ' && !is_letter(s2_first) && !is_number(s2_first)
+                // 上文末尾为字母后的空格，且新码以非空格的标点开头：去掉上文末尾的空格
+                if s1_chars.len() > 1
+                    && is_letter(s1_chars[s1_chars.len() - 2])
+                    && s1_last == ' '
+                    && s2_first != ' '
+                    && !is_letter(s2_first)
+                    && !is_number(s2_first)
                 {
                     s1_chars.pop().expect("无法删除头部末尾的空格");
-                    if s1_chars.len() > 0 {
-                        let tail = vec![s1_chars[s1_chars.len() - 1], ' '];
-                        mod_t1 -= self.get_time(&tail);
-                    }
+                    let tail = vec![s1_chars[s1_chars.len() - 1], ' '];
+                    mod_t1 -= self.get_time(&tail);
                 }
                 // 上文末尾为字母，且新码以形码或数字开头：在上文末尾加空格
                 else if is_letter(s1_last) && (is_xing(s2_first) || is_number(s2_first)) {

@@ -29,7 +29,7 @@ pub(crate) fn analyze(
         ];
     }
 
-    // 完整分析的变量和方法
+    // 完整分析的变量
     let mut parts_count = Vec::with_capacity(14); // 每组码的计数
     for _ in 0..14 {
         parts_count.push(AtomicUsize::new(0));
@@ -43,6 +43,7 @@ pub(crate) fn analyze(
     let quintuple_count = AtomicUsize::new(0); // 同键按5次
     let turns_count = AtomicUsize::new(0); // 左右左 + 右左右的次数
 
+    // 完整分析的方法
     let double_contains = |c1: char, c2: char, s1: &str, s2: &str| {
         (s1.contains(c1) && s2.contains(c2)) || (s1.contains(c2) && s2.contains(c1))
     };
@@ -130,18 +131,15 @@ pub(crate) fn analyze(
         if i > 1 {
             count_3_chars(chars[i - 2], chars[i - 1], chars[i]);
         }
-        if i > 2
-            && chars[i - 3] == chars[i - 2]
-            && chars[i - 2] == chars[i - 1]
-            && chars[i - 1] == chars[i]
+        if i > 2 && chars[i] == chars[i - 3] && chars[i] == chars[i - 2] && chars[i] == chars[i - 1]
         {
             quadruple_count.fetch_add(1, Ordering::Relaxed);
         }
         if i > 3
-            && chars[i - 4] == chars[i - 3]
-            && chars[i - 3] == chars[i - 2]
-            && chars[i - 2] == chars[i - 1]
-            && chars[i - 1] == chars[i]
+            && chars[i] == chars[i - 4]
+            && chars[i] == chars[i - 3]
+            && chars[i] == chars[i - 2]
+            && chars[i] == chars[i - 1]
         {
             quintuple_count.fetch_add(1, Ordering::Relaxed);
         }

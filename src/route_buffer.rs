@@ -1,4 +1,5 @@
 use crate::route_connector::RouteConnector;
+use std::path::PathBuf;
 
 /// 编码路径缓冲区
 pub(crate) struct RouteBuffer {
@@ -37,6 +38,16 @@ impl RouteBuffer {
         self.connected
     }
 
+    /// 找不到当量的按键组合数量
+    pub(crate) fn unknown_keys_count(&self) -> usize {
+        self.connector.unknown_keys_count()
+    }
+
+    /// 导出找不到当量的按键组合
+    pub(crate) fn report_unknown_keys(&mut self, text_path: &PathBuf) {
+        self.connector.report_unknown_keys(text_path);
+    }
+
     pub(crate) fn next(&mut self) {
         self.buffer[self.head].0.clear();
         self.buffer[self.head].1 = 0.0;
@@ -63,21 +74,23 @@ impl RouteBuffer {
         if best_route.0.len() > 1000 && self.distance == 0 {
             self.global_best_route = self.connector.connect(
                 &self.global_best_route.0,
-                self.global_best_route.1,
                 &best_route.0,
+                self.global_best_route.1,
                 best_route.1,
             );
             best_route = (String::new(), 0.0);
             self.clear();
         }
 
-        // 连接编码并更新最优路径
+        // 连接编码
         let index = (self.head + word_len) % self.buffer.len();
         let (code, time) =
             self.connector
-                .connect(&best_route.0, best_route.1, tail_code, tail_time);
-        if self.buffer[index].0.is_empty() // 未编码过
-            || time < self.buffer[index].1 // 当量更小或同量且编码更短
+                .connect(&best_route.0, tail_code, best_route.1, tail_time);
+
+        // 更新最优路径：未编码过，或当量更小，或同当量且编码更短
+        if self.buffer[index].0.is_empty()
+            || time < self.buffer[index].1
             || code.len() < self.buffer[index].0.len()
         {
             self.buffer[index] = (code, time);
@@ -88,8 +101,7 @@ impl RouteBuffer {
         self.connected = true;
     }
 
-    /// 获取全局最优路径
-    pub(crate) fn get_global_best_route(&self) -> Result<(String, f64), &'static str> {
+    pub(crate) fn get_global_best_route(&mut self) -> Result<(String, f64), &'static str> {
         if self.distance != 0 {
             Err("存在超出文本尾部的编码")
         } else {
@@ -99,8 +111,8 @@ impl RouteBuffer {
             } else {
                 Ok(self.connector.connect(
                     &self.global_best_route.0,
-                    self.global_best_route.1,
                     &best_route.0,
+                    self.global_best_route.1,
                     best_route.1,
                 ))
             }

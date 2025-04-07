@@ -11,11 +11,19 @@ pub(crate) struct RouteConnector {
 }
 
 impl RouteConnector {
-    pub(crate) fn new(time_map: HashMap<(char, char), f64>, method_code: usize) -> RouteConnector {
-        RouteConnector {
+    pub(crate) fn new(time_map: HashMap<(char, char), f64>, method_code: usize) -> Self {
+        Self {
             time_map,
             unknown_keys: HashSet::new(),
             method_code,
+        }
+    }
+
+    pub(crate) fn clone(&self) -> Self {
+        Self {
+            time_map: self.time_map.clone(),
+            unknown_keys: self.unknown_keys.clone(),
+            method_code: self.method_code,
         }
     }
 

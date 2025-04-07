@@ -22,7 +22,7 @@ impl RouteBuffer {
         if size == 0 {
             Err("编码路径缓冲区大小不能为0")
         } else {
-            Ok(RouteBuffer {
+            Ok(Self {
                 buffer: vec![(String::new(), 0.0); size],
                 connector,
                 head: 0,

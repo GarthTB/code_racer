@@ -1,6 +1,7 @@
-use crate::dict_loader;
+use crate::dict_loader::load_dict;
 use crate::route_connector::RouteConnector;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::fs::File;
 use std::path::PathBuf;
 
 pub(crate) fn read_line() -> String {
@@ -8,12 +9,12 @@ pub(crate) fn read_line() -> String {
     loop {
         match std::io::stdin().read_line(&mut input) {
             Ok(_) => return input.trim().to_string(),
-            Err(_) => println!("无法读取输入。请重新输入。"),
+            Err(message) => println!("无法读取输入。错误信息：{message}。请重新输入。"),
         }
     }
 }
 
-pub(crate) fn get_connector(time_map: HashMap<String, f64>) -> RouteConnector {
+pub(crate) fn get_connector(time_map: HashMap<(char, char), f64>) -> RouteConnector {
     println!("请输入连接方法代号：");
     println!("0: 空格或符号; 1: 无间隔; 2: 键道顶功");
     loop {
@@ -27,33 +28,36 @@ pub(crate) fn get_connector(time_map: HashMap<String, f64>) -> RouteConnector {
 }
 
 pub(crate) fn get_dict(
-    punct_items: Vec<(String, String, usize)>,
-    connector: &RouteConnector,
+    punct_items: HashSet<(String, String, usize)>,
+    connector: RouteConnector,
 ) -> (HashMap<char, Vec<(String, String, f64)>>, usize) {
     println!("请输入词库文件路径：");
     loop {
         let path = PathBuf::from(read_line());
         match path.exists() {
-            true => match dict_loader::load_dict(&path, punct_items.clone(), connector) {
+            true => match load_dict(&path, punct_items.clone(), connector.clone()) {
                 Ok((dict, max_word_len)) => return (dict, max_word_len),
-                Err(message) => println!("{message}。请重新输入。"),
+                Err(message) => println!("无法加载词库。错误信息：{message}。请重新输入。"),
             },
             false => println!("文件不存在。请重新输入。"),
         }
     }
 }
 
-pub(crate) fn get_text() -> (Vec<char>, PathBuf) {
+pub(crate) fn get_text() -> File {
     println!("请输入待编码文本文件路径：");
     loop {
         let path = PathBuf::from(read_line());
         match path.exists() {
-            true => match std::fs::read_to_string(&path) {
-                Ok(text) => match text.is_empty() {
-                    false => return (text.chars().collect(), path),
-                    true => println!("文件为空。请重新输入。"),
+            true => match File::create(&path) {
+                Ok(file) => match file.metadata() {
+                    Ok(metadata) => match metadata.len() > 0 {
+                        true => return file,
+                        false => println!("文件为空。请重新输入。"),
+                    },
+                    Err(message) => println!("无法获取文件信息。错误信息：{message}。请重新输入。"),
                 },
-                Err(_) => println!("无法读取文件。请重新输入。"),
+                Err(message) => println!("无法读取文件。错误信息：{message}。请重新输入。"),
             },
             false => println!("文件不存在。请重新输入。"),
         }

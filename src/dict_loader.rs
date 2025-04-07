@@ -30,7 +30,7 @@ pub(crate) fn read_rime_file(
 /// 返回按首字符分组的词库，以及其中词组的最大长度。子词库中的元素为(词组, 编码, 击键当量)
 pub(crate) fn load_dict(
     path: &PathBuf,
-    punct_items: &HashSet<(String, String, usize)>,
+    punct_items: HashSet<(String, String, usize)>,
     connector: RouteConnector, // 克隆一个，和用于编码的连接器区分开，不要借用
 ) -> Result<(HashMap<char, Vec<(String, String, f64)>>, usize), &'static str> {
     println!("读取词库文件...");
@@ -39,12 +39,12 @@ pub(crate) fn load_dict(
     println!("读取完成。共{}个条目。", dict_items.len());
     println!("结合标点符号排序并生成翻页、选重信息...");
     let sorted_dict_items = sort_items(&dict_items);
-    let sorted_punct_items = sort_items(punct_items);
+    let sorted_punct_items = sort_items(&punct_items);
     let (dict, max_word_len) = convert_items(sorted_dict_items, sorted_punct_items, connector);
     if dict.is_empty() {
         return Err("词库为空");
     }
-    println!("处理完成。首字共覆盖{}个字。", dict.len());
+    println!("处理完成。首字共覆盖{}个字符。", dict.len());
     Ok((dict, max_word_len))
 }
 

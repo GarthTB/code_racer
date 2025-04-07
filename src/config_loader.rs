@@ -44,7 +44,7 @@ pub(crate) fn load_time_map() -> Result<HashMap<(char, char), f64>, &'static str
         }
 
         match parts[1].parse() {
-            Err(_) => println!("无法解析此行的击键当量：{}", line),
+            Err(message) => println!("无法解析此行的击键当量：{line}。错误信息：{message}"),
             Ok(time_cost) => match time_map.get(&(keys[0], keys[1])) {
                 Some(_) => println!("击键当量文件中有重复的键：{}", parts[0]),
                 None => {

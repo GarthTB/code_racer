@@ -41,7 +41,7 @@ pub(crate) fn save(text_path: &PathBuf, name: &str, content: Vec<String>) {
             println!("{name}已保存至：{unique_path}");
         }
         Err(message) => {
-            println!("无法将{name}保存至文件！错误：{message}");
+            println!("无法将{name}保存至文件。错误信息：{message}");
             println!("将直接输出到控制台...");
             for line in content {
                 println!("{line}");

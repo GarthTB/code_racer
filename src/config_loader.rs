@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::env::current_exe;
 use std::fs::{File, read_to_string};
 use std::io::{BufRead, BufReader};
@@ -19,41 +19,41 @@ pub(crate) fn load_layout() -> Result<Vec<String>, &'static str> {
     Ok(layout_lines)
 }
 
-pub(crate) fn load_punct_items() -> Result<Vec<(String, String, usize)>, &'static str> {
+pub(crate) fn load_punct_items() -> Result<HashSet<(String, String, usize)>, &'static str> {
     println!("加载标点符号配置...");
     let punct_path = get_config_path("punct_dict.txt")?;
     let punct_file = File::open(&punct_path).map_err(|_| "无法打开标点符号文件")?;
-
-    let mut items = Vec::with_capacity(32);
-    for line in BufReader::new(punct_file).lines() {
-        let line = line.map_err(|_| "无法读取标点符号文件中的一行")?;
-        crate::dict_loader::parse_dict_line(&mut items, &line);
-    }
-
-    println!("加载完成。默认为24行，实际为{}行。", items.len());
+    let items = crate::dict_loader::read_rime_file(punct_file, 32);
+    println!("加载完成。默认为30项，实际为{}项。", items.len());
     Ok(items)
 }
 
-pub(crate) fn load_time_cost() -> Result<HashMap<String, f64>, &'static str> {
+pub(crate) fn load_time_map() -> Result<HashMap<(char, char), f64>, &'static str> {
     println!("加载击键当量配置...");
-    let time_cost_path = get_config_path("time_cost.txt")?;
-    let time_cost_file = File::open(&time_cost_path).map_err(|_| "无法打开击键当量文件")?;
+    let time_map_path = get_config_path("time_map.txt")?;
+    let time_map_file = File::open(&time_map_path).map_err(|_| "无法打开击键当量文件")?;
 
-    let mut time_cost_map = HashMap::with_capacity(4096);
-    for line in BufReader::new(time_cost_file).lines() {
+    let mut time_map = HashMap::with_capacity(4096);
+    for line in BufReader::new(time_map_file).lines() {
         let line = line.map_err(|_| "无法读取击键当量文件中的一行")?;
         let parts: Vec<&str> = line.split('\t').collect();
-        if parts.len() != 2 {
-            println!("击键当量文件中有格式错误的行：{}", line)
-        } else if let Ok(time_cost) = parts[1].parse() {
-            if let Some(_) = time_cost_map.insert(parts[0].to_string(), time_cost) {
-                println!("击键当量文件中有重复的键：{}", parts[0])
-            }
-        } else {
-            println!("无法解析此行的击键当量：{}", line)
-        };
+        let keys: Vec<char> = parts[0].chars().collect();
+        if parts.len() != 2 || keys.len() != 2 {
+            println!("击键当量文件中有格式错误的行：{}", line);
+            continue;
+        }
+
+        match parts[1].parse() {
+            Err(_) => println!("无法解析此行的击键当量：{}", line),
+            Ok(time_cost) => match time_map.get(&(keys[0], keys[1])) {
+                Some(_) => println!("击键当量文件中有重复的键：{}", parts[0]),
+                None => {
+                    time_map.insert((keys[0], keys[1]), time_cost);
+                }
+            },
+        }
     }
 
-    println!("加载完成。默认为2116行，实际为{}行。", time_cost_map.len());
-    Ok(time_cost_map)
+    println!("加载完成。默认为2116行，实际为{}行。", time_map.len());
+    Ok(time_map)
 }

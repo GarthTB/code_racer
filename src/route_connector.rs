@@ -23,7 +23,14 @@ impl RouteConnector {
         self.unknown_keys.len()
     }
 
-    pub(crate) fn report_unknown_keys(&mut self, text_path: &PathBuf) {}
+    pub(crate) fn report_unknown_keys(&mut self, text_path: &PathBuf) {
+        let content = self
+            .unknown_keys
+            .iter()
+            .map(|(c1, c2)| format!("{c1}{c2}"))
+            .collect();
+        crate::report_saver::save(text_path, "找不到当量的按键组合", content);
+    }
 
     pub(crate) fn get_time(&mut self, chars: &Vec<char>) -> f64 {
         let mut sum = 0.0;
@@ -45,14 +52,14 @@ impl RouteConnector {
         let s1_last = if s1.is_empty() {
             '\0'
         } else {
-            s1.chars().next_back().expect("无法获取前部末字符。")
+            s1.chars().next_back().expect("无法获取前部末字符")
         };
         let (s2_first, s2_last) = if s2.is_empty() {
             ('\0', '\0')
         } else {
             (
-                s2.chars().next().expect("无法获取后部首字符。"),
-                s2.chars().next_back().expect("无法获取后部末字符。"),
+                s2.chars().next().expect("无法获取后部首字符"),
+                s2.chars().next_back().expect("无法获取后部末字符"),
             )
         };
 
@@ -124,7 +131,7 @@ impl RouteConnector {
                 // 上文末尾为空格，且新码以非空格的标点开头：去掉上文末尾的空格
                 if s1_last == ' ' && s2_first != ' ' && !is_letter(s2_first) && !is_number(s2_first)
                 {
-                    s1_chars.pop().expect("无法删除头部末尾的空格。");
+                    s1_chars.pop().expect("无法删除头部末尾的空格");
                     if s1_chars.len() > 0 {
                         let tail = vec![s1_chars[s1_chars.len() - 1], ' '];
                         mod_t1 -= self.get_time(&tail);
@@ -143,7 +150,7 @@ impl RouteConnector {
                 s1_chars.append(&mut s2_chars);
                 (s1_chars.into_iter().collect(), time)
             }
-            _ => panic!("未知的连接方法代号。"),
+            _ => panic!("未知的连接方法代号"),
         }
     }
 }

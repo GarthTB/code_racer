@@ -14,7 +14,7 @@ pub(crate) fn encode(
 
     println!("共需计算{}字。计算编码...", text_chars.len());
     for i in 0..text_chars.len() {
-        if i % 1000 == 0 {
+        if i % 3000 == 0 {
             let count = buffer.unknown_keys_count();
             print!("\r已计算至第{i}字。遇到{}个找不到当量的按键组合。", count);
         }

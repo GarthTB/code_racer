@@ -32,7 +32,7 @@ pub(crate) fn load_dict(
     path: &PathBuf,
     punct_items: HashSet<(String, String, usize)>,
     connector: RouteConnector, // 克隆一个，和用于编码的连接器区分开，不要借用
-) -> Result<(HashMap<char, Vec<(String, String, f64)>>, usize), &'static str> {
+) -> Result<(HashMap<char, Vec<(Vec<char>, Vec<char>, f64)>>, usize), &'static str> {
     println!("读取词库文件...");
     let file = File::open(path).map_err(|_| "无法打开词库文件")?;
     let dict_items = read_rime_file(file, 65536)?;
@@ -70,7 +70,7 @@ fn convert_items(
     dict_items: Vec<(String, String, usize)>, // 已经过排序，优先级无用
     punct_items: Vec<(String, String, usize)>, // 已经过排序，优先级无用
     mut connector: RouteConnector,
-) -> (HashMap<char, Vec<(String, String, f64)>>, usize) {
+) -> (HashMap<char, Vec<(Vec<char>, Vec<char>, f64)>>, usize) {
     // 生成唯一编码的方法
     let count = dict_items.len() + punct_items.len();
     let mut used_codes = HashSet::with_capacity(count);
@@ -94,13 +94,11 @@ fn convert_items(
         unique_code
     };
 
-    // 装填词库，并记录最长词组长度的方法
-    let mut max_word_len = 0;
-    let mut mid_dict: HashMap<String, (String, f64)> = HashMap::with_capacity(65536);
+    // 装填词库的方法，编码拆成数组
+    let mut mid_dict: HashMap<String, (Vec<char>, f64)> = HashMap::with_capacity(65536);
     let mut add_item = |word: String, code: String| {
-        max_word_len = max_word_len.max(word.chars().count()); // 记录最长的词组长度
-        let new_code = get_unique_code(&code);
-        let new_time = connector.get_time(&new_code.chars().collect());
+        let new_code = get_unique_code(&code).chars().collect();
+        let new_time = connector.get_time(&new_code);
         if let Some((old_code, old_time)) = mid_dict.get(&word) {
             if new_time < *old_time || new_code.len() < old_code.len() {
                 mid_dict.insert(word, (new_code, new_time));
@@ -118,7 +116,6 @@ fn convert_items(
         add_item(punct, code);
     }
     println!("整理后共{}个最优词组。", mid_dict.len());
-    println!("最大词组长度为{}个字。", max_word_len);
     if connector.unknown_keys_count() == 0 {
         println!("编码中没有遇到找不到当量的按键组合。");
     } else {
@@ -128,16 +125,19 @@ fn convert_items(
         );
     }
 
-    // 按首字分组
+    // 词组拆成数组，按首字分组，并记录最长词组长度
+    let mut max_word_len = 0;
     let mut master_dict: HashMap<char, Vec<_>> = HashMap::with_capacity(16384);
     for (word, (code, time)) in mid_dict {
-        let key = word.chars().next().expect("无法获取词组的首字");
-        if let Some(sub_dict) = master_dict.get_mut(&key) {
-            sub_dict.push((word, code, time));
+        let word_chars: Vec<char> = word.chars().collect();
+        max_word_len = max_word_len.max(word_chars.len());
+        if let Some(sub_dict) = master_dict.get_mut(&word_chars[0]) {
+            sub_dict.push((word_chars, code, time));
         } else {
-            master_dict.insert(key, vec![(word, code, time)]);
+            master_dict.insert(word_chars[0], vec![(word_chars, code, time)]);
         }
     }
+    println!("最大词组长度为{}个字。", max_word_len);
 
     (master_dict, max_word_len)
 }

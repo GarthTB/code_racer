@@ -33,8 +33,9 @@ fn main() {
     let buffer_size = 16.max(max_word_len);
     let mut buffer =
         route_buffer::RouteBuffer::new(buffer_size, connector).unwrap_or_else(exit_with_error);
-    let (text_len, route, time) =
+    let (route, time) =
         text_encoder::encode(&text_path, dict, &mut buffer).unwrap_or_else(exit_with_error);
+    let text_len = buffer.count();
 
     // 输出报告
     let report = code_analyzer::analyze(layout, text_len, route, time);

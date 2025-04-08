@@ -7,14 +7,14 @@ pub(crate) fn encode(
     text_path: &PathBuf,
     dict: HashMap<char, Vec<(String, String, f64)>>,
     buffer: &mut RouteBuffer,
-) -> Result<(usize, String, f64), &'static str> {
+) -> Result<(String, f64), &'static str> {
     println!("计算编码...");
     let text_string = read_to_string(text_path).map_err(|_| "无法读取待编码文本文件")?;
     let text_chars: Vec<char> = text_string.chars().collect();
 
     println!("共需计算{}字。计算编码...", text_chars.len());
     for i in 0..text_chars.len() {
-        if i % 500 == 0 {
+        if i % 1000 == 0 {
             let count = buffer.unknown_keys_count();
             print!("\r已计算至第{i}字。遇到{}个找不到当量的按键组合。", count);
         }
@@ -34,5 +34,5 @@ pub(crate) fn encode(
     let (route, time) = buffer.get_global_best_route()?;
     println!("\n计算完成。");
 
-    Ok((text_chars.len(), route, time))
+    Ok((route, time))
 }

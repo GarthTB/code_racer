@@ -1,7 +1,6 @@
 use crate::route_connector::RouteConnector;
 use std::path::PathBuf;
 
-/// 编码路径缓冲区
 pub(crate) struct RouteBuffer {
     /// 索引为待编码的第一个字符的位置
     buffer: Vec<(String, f64)>,
@@ -9,6 +8,8 @@ pub(crate) struct RouteBuffer {
     connector: RouteConnector,
     /// 当前位置
     head: usize,
+    /// 字数计数器
+    count: usize,
     /// 缓冲区内最远终点位置与当前位置的距离
     distance: usize,
     /// 是否在当前位置连接过编码
@@ -26,6 +27,7 @@ impl RouteBuffer {
                 buffer: vec![(String::new(), 0.0); size],
                 connector,
                 head: 0,
+                count: 0,
                 distance: 0,
                 connected: false,
                 global_best_route: (String::new(), 0.0),
@@ -36,6 +38,11 @@ impl RouteBuffer {
     /// 获取是否在当前位置连接过编码
     pub(crate) fn is_connected(&self) -> bool {
         self.connected
+    }
+
+    /// 获取迭代过的字数
+    pub(crate) fn count(&self) -> usize {
+        self.count
     }
 
     /// 找不到当量的按键组合数量
@@ -52,6 +59,7 @@ impl RouteBuffer {
         self.buffer[self.head].0.clear();
         self.buffer[self.head].1 = 0.0;
         self.head = (self.head + 1) % self.buffer.len();
+        self.count += 1;
         self.distance -= 1;
         self.connected = false;
     }

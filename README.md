@@ -1,10 +1,10 @@
 # [code_racer 🐎 赛码器](https://github.com/GarthTB/code_racer)
 
 [![Language](https://img.shields.io/badge/Built%20with-Rust-brown)](https://www.rust-lang.org/zh-CN/)
-[![Version](https://img.shields.io/badge/Latest%20Release-0.3.0-brightgreen)](https://github.com/GarthTB/code_racer/releases)
+[![Version](https://img.shields.io/badge/Latest%20Release-0.4.0-brightgreen)](https://github.com/GarthTB/code_racer/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)
 
-轻松计算数十万字的文本在自定义的键盘布局下、用特定输入法时，击键时间当量[1]最小的打法，并简单分析这个最优的编码。
+轻松计算上百万字的文本在自定义的键盘布局下、用特定输入法时，击键时间当量[1]最小的打法，并简单分析这个最优的编码。
 
 ## 配置文件
 
@@ -55,6 +55,11 @@
 - [1]陈一凡,张鹿,周志农.键位相关速度当量的研究[J].中文信息学报,1990,(04):12-18+11.
 
 ## 发布日志
+
+### v0.4.0 - 20250409
+
+- 修复：键道顶功的标点顶功算法
+- 优化：大幅提速
 
 ### v0.3.0 - 20250408
 

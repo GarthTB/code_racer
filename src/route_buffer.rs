@@ -14,8 +14,8 @@ pub(crate) struct RouteBuffer {
     distance: usize,
     /// 是否在当前位置连接过编码
     connected: bool,
-    /// 暂存的最优路径
-    global_best_route: (Vec<char>, f64),
+    /// 暂存的全局最优路径
+    global_best_route: Vec<char>,
 }
 
 impl RouteBuffer {
@@ -30,7 +30,7 @@ impl RouteBuffer {
                 count: 0,
                 distance: 0,
                 connected: false,
-                global_best_route: (Vec::new(), 0.0),
+                global_best_route: Vec::new(),
             })
         }
     }
@@ -64,26 +64,15 @@ impl RouteBuffer {
         self.connected = false;
     }
 
-    fn clear(&mut self) {
-        for i in 0..self.buffer.len() {
-            self.buffer[i].0.clear();
-            self.buffer[i].1 = 0.0;
-        }
-        self.distance = 0;
-        self.connected = false;
-    }
-
     /// 在当前位置连接编码
     pub(crate) fn connect_code(&mut self, word_len: usize, tail_code: &[char], tail_time: f64) {
-        // 如果当前路径太长，且当前路径就是唯一路径（全局最优），则暂存并清空缓冲区
-        if self.buffer[self.head].0.len() > 200 && self.distance == 0 {
-            self.global_best_route = self.connector.connect(
-                &self.global_best_route.0,
-                &self.buffer[self.head].0,
-                self.global_best_route.1,
-                self.buffer[self.head].1,
-            );
-            self.clear();
+        // 如果当前路径太长，且当前路径为唯一路径（全局最优），则暂存并清空缓冲区
+        if self.buffer[self.head].0.len() > 100 && self.distance == 0 {
+            // 分成已经不影响后续编码的头部和仍在影响后续编码的尾部
+            let (dead_part, live_part) = self.buffer[self.head].0.split_at(96);
+            // 头部存入全局最优路径，尾部放回缓冲区
+            self.global_best_route.append(&mut dead_part.to_vec());
+            self.buffer[self.head].0 = live_part.to_vec();
         }
 
         // 连接编码
@@ -112,16 +101,9 @@ impl RouteBuffer {
         if self.distance != 0 {
             Err("存在超出文本尾部的编码")
         } else {
-            if self.buffer[self.head].0.is_empty() {
-                Ok((self.global_best_route.0.clone(), self.global_best_route.1))
-            } else {
-                Ok(self.connector.connect(
-                    &self.global_best_route.0,
-                    &self.buffer[self.head].0,
-                    self.global_best_route.1,
-                    self.buffer[self.head].1,
-                ))
-            }
+            self.global_best_route
+                .append(&mut self.buffer[self.head].0.clone());
+            Ok((self.global_best_route.clone(), self.buffer[self.head].1))
         }
     }
 }

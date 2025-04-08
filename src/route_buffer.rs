@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 pub(crate) struct RouteBuffer {
     /// 索引为待编码的第一个字符的位置
-    buffer: Vec<(String, f64)>,
+    buffer: Vec<(Vec<char>, f64)>,
     /// 编码路径连接器
     connector: RouteConnector,
     /// 当前位置
@@ -15,7 +15,7 @@ pub(crate) struct RouteBuffer {
     /// 是否在当前位置连接过编码
     connected: bool,
     /// 暂存的最优路径
-    global_best_route: (String, f64),
+    global_best_route: (Vec<char>, f64),
 }
 
 impl RouteBuffer {
@@ -24,13 +24,13 @@ impl RouteBuffer {
             Err("编码路径缓冲区大小不能为0")
         } else {
             Ok(Self {
-                buffer: vec![(String::new(), 0.0); size],
+                buffer: vec![(Vec::new(), 0.0); size],
                 connector,
                 head: 0,
                 count: 0,
                 distance: 0,
                 connected: false,
-                global_best_route: (String::new(), 0.0),
+                global_best_route: (Vec::new(), 0.0),
             })
         }
     }
@@ -74,29 +74,28 @@ impl RouteBuffer {
     }
 
     /// 在当前位置连接编码
-    pub(crate) fn connect_code(&mut self, word_len: usize, tail_code: &str, tail_time: f64) {
-        // 取出到当前位置的最优路径
-        let mut best_route = self.buffer[self.head].clone();
-
-        // 如果路径太长，且当前路径就是唯一路径（全局最优），则暂存并清空缓冲区
-        if best_route.0.len() > 1000 && self.distance == 0 {
+    pub(crate) fn connect_code(&mut self, word_len: usize, tail_code: &[char], tail_time: f64) {
+        // 如果当前路径太长，且当前路径就是唯一路径（全局最优），则暂存并清空缓冲区
+        if self.buffer[self.head].0.len() > 200 && self.distance == 0 {
             self.global_best_route = self.connector.connect(
                 &self.global_best_route.0,
-                &best_route.0,
+                &self.buffer[self.head].0,
                 self.global_best_route.1,
-                best_route.1,
+                self.buffer[self.head].1,
             );
-            best_route = (String::new(), 0.0);
             self.clear();
         }
 
         // 连接编码
-        let index = (self.head + word_len) % self.buffer.len();
-        let (code, time) =
-            self.connector
-                .connect(&best_route.0, tail_code, best_route.1, tail_time);
+        let (code, time) = self.connector.connect(
+            &self.buffer[self.head].0,
+            tail_code,
+            self.buffer[self.head].1,
+            tail_time,
+        );
 
-        // 更新最优路径：未编码过，或当量更小，或同当量且编码更短
+        // 若目标位置没有编码，或当量更小，或同当量且编码更短：更新最优路径
+        let index = (self.head + word_len) % self.buffer.len();
         if self.buffer[index].0.is_empty()
             || time < self.buffer[index].1
             || code.len() < self.buffer[index].0.len()
@@ -109,19 +108,18 @@ impl RouteBuffer {
         self.connected = true;
     }
 
-    pub(crate) fn get_global_best_route(&mut self) -> Result<(String, f64), &'static str> {
+    pub(crate) fn get_global_best_route(&mut self) -> Result<(Vec<char>, f64), &'static str> {
         if self.distance != 0 {
             Err("存在超出文本尾部的编码")
         } else {
-            let best_route = self.buffer[self.head].clone();
-            if best_route.0.is_empty() {
+            if self.buffer[self.head].0.is_empty() {
                 Ok((self.global_best_route.0.clone(), self.global_best_route.1))
             } else {
                 Ok(self.connector.connect(
                     &self.global_best_route.0,
-                    &best_route.0,
+                    &self.buffer[self.head].0,
                     self.global_best_route.1,
-                    best_route.1,
+                    self.buffer[self.head].1,
                 ))
             }
         }

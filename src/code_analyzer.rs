@@ -5,23 +5,22 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 pub(crate) fn analyze(
     layout: Vec<String>,
     text_len: usize,
-    route: String,
+    route: Vec<char>,
     time: f64,
 ) -> Vec<String> {
     // 简单分析
-    let chars: Vec<char> = route.chars().collect();
-    let code_len = chars.len() as f64 / text_len as f64;
+    let code_len = route.len() as f64 / text_len as f64;
     let time_per_char = time / text_len as f64;
-    let time_per_key = time / chars.len() as f64;
+    let time_per_key = time / route.len() as f64;
 
     // 简单返回
     if layout.len() != 14 {
         println!("键盘布局配置错误，将只进行简单分析。");
         return vec![
-            route,
+            route.iter().collect(),
             "---以上为最优编码路径，以下为简单分析结果---".to_string(),
             format!("字数\t{}", text_len),
-            format!("码数\t{}", chars.len()),
+            format!("码数\t{}", route.len()),
             format!("当量\t{:.1}", time),
             format!("字均码长\t{:.8}", code_len),
             format!("字均当量\t{:.4}", time_per_char),
@@ -34,6 +33,7 @@ pub(crate) fn analyze(
     for _ in 0..14 {
         parts_count.push(AtomicUsize::new(0));
     }
+
     let s_leap_count = AtomicUsize::new(0); // 同指跨1排
     let m_leap_count = AtomicUsize::new(0); // 同指跨2排
     let l_leap_count = AtomicUsize::new(0); // 同指跨3排
@@ -123,23 +123,23 @@ pub(crate) fn analyze(
 
     // 开始并行分析
     println!("并行分析编码...");
-    (0..chars.len()).into_par_iter().for_each(|i| {
-        count_1_char(chars[i]);
+    (0..route.len()).into_par_iter().for_each(|i| {
+        count_1_char(route[i]);
         if i > 0 {
-            count_2_chars(chars[i - 1], chars[i]);
+            count_2_chars(route[i - 1], route[i]);
         }
         if i > 1 {
-            count_3_chars(chars[i - 2], chars[i - 1], chars[i]);
+            count_3_chars(route[i - 2], route[i - 1], route[i]);
         }
-        if i > 2 && chars[i] == chars[i - 3] && chars[i] == chars[i - 2] && chars[i] == chars[i - 1]
+        if i > 2 && route[i] == route[i - 3] && route[i] == route[i - 2] && route[i] == route[i - 1]
         {
             quadruple_count.fetch_add(1, Ordering::Relaxed);
         }
         if i > 3
-            && chars[i] == chars[i - 4]
-            && chars[i] == chars[i - 3]
-            && chars[i] == chars[i - 2]
-            && chars[i] == chars[i - 1]
+            && route[i] == route[i - 4]
+            && route[i] == route[i - 3]
+            && route[i] == route[i - 2]
+            && route[i] == route[i - 1]
         {
             quintuple_count.fetch_add(1, Ordering::Relaxed);
         }
@@ -177,15 +177,15 @@ pub(crate) fn analyze(
     let gen_report = |name: &str, involved_len: usize, count: usize| {
         format!(
             "{name}\t{count}\t{:.3}%",
-            100.0 * count as f64 / (chars.len() - involved_len + 1) as f64
+            100.0 * count as f64 / (route.len() - involved_len + 1) as f64
         )
     };
 
     vec![
-        route,
+        route.iter().collect(),
         "---以上为最优编码路径，以下为完整分析结果---".to_string(),
         format!("字数\t{}", text_len),
-        format!("码数\t{}", chars.len()),
+        format!("码数\t{}", route.len()),
         format!("当量\t{:.1}", time),
         format!("字均码长\t{:.8}", code_len),
         format!("字均当量\t{:.4}", time_per_char),

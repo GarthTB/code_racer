@@ -46,7 +46,6 @@ fn main() {
         buffer.report_unknown_keys(&text_path);
     }
 
-    // 等待用户输入
     println!("程序执行完毕。按回车键退出...");
     console_reader::read_line();
 }

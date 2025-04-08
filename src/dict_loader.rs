@@ -97,7 +97,7 @@ fn convert_items(
     // 装填词库的方法，编码拆成数组
     let mut mid_dict: HashMap<String, (Vec<char>, f64)> = HashMap::with_capacity(65536);
     let mut add_item = |word: String, code: String| {
-        let new_code = get_unique_code(&code).chars().collect();
+        let new_code: Vec<char> = get_unique_code(&code).chars().collect();
         let new_time = connector.get_time(&new_code);
         if let Some((old_code, old_time)) = mid_dict.get(&word) {
             if new_time < *old_time || new_code.len() < old_code.len() {

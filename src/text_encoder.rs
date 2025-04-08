@@ -5,9 +5,9 @@ use std::path::PathBuf;
 
 pub(crate) fn encode(
     text_path: &PathBuf,
-    dict: HashMap<char, Vec<(String, String, f64)>>,
+    dict: HashMap<char, Vec<(Vec<char>, Vec<char>, f64)>>,
     buffer: &mut RouteBuffer,
-) -> Result<(String, f64), &'static str> {
+) -> Result<(Vec<char>, f64), &'static str> {
     println!("计算编码...");
     let text_string = read_to_string(text_path).map_err(|_| "无法读取待编码文本文件")?;
     let text_chars: Vec<char> = text_string.chars().collect();
@@ -20,14 +20,13 @@ pub(crate) fn encode(
         }
         if let Some(sub_dict) = dict.get(&text_chars[i]) {
             for (word, code, time) in sub_dict {
-                let word_chars: Vec<char> = word.chars().collect();
-                if text_chars[i..].starts_with(&word_chars) {
-                    buffer.connect_code(word_chars.len(), code, *time)
+                if text_chars[i..].starts_with(word) {
+                    buffer.connect_code(word.len(), code, *time)
                 }
             }
         }
         if !buffer.is_connected() {
-            buffer.connect_code(1, text_chars[i].to_string().as_str(), 0.0)
+            buffer.connect_code(1, &text_chars[i..i + 1], 0.0)
         }
         buffer.next();
     }
